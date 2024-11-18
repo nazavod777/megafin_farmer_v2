@@ -11,8 +11,10 @@ require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
+	github.com/corpix/uarand v0.2.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240223125850-b1e8a79f509c // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
@@ -21,6 +23,8 @@ require (
 	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
+	github.com/mssola/user_agent v0.6.0 // indirect
+	github.com/refraction-networking/utls v1.6.7 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
