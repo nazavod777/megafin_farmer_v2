@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/corpix/uarand"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/valyala/fasthttp"
@@ -81,6 +82,7 @@ func profileRequest(client *fasthttp.Client,
 func loginAccount(client *fasthttp.Client,
 	privateKeyHex string,
 	headers map[string]string) string {
+
 	headers["accept"] = "application/json"
 
 	privateKey, err := crypto.HexToECDSA(privateKeyHex)
@@ -165,6 +167,7 @@ func StartFarmAccount(privateKey string,
 		"origin":          "https://app.megafin.xyz",
 		"referer":         "https://app.megafin.xyz",
 		"connection":      "close",
+		"user-agent":      uarand.GetRandom(),
 	}
 
 	client := GetClient(proxy)
@@ -187,6 +190,7 @@ func ParseAccountBalance(privateKey string,
 		"origin":          "https://app.megafin.xyz",
 		"referer":         "https://app.megafin.xyz",
 		"connection":      "close",
+		"user-agent":      uarand.GetRandom(),
 	}
 
 	client := GetClient(proxy)
