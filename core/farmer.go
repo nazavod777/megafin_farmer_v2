@@ -53,7 +53,7 @@ func doRequest(client *fasthttp.Client,
 
 func profileRequest(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) {
+	headers map[string]string) (float64, float64) {
 	for {
 		var responseData customTypes.ProfileResponseStruct
 
@@ -74,7 +74,7 @@ func profileRequest(client *fasthttp.Client,
 			continue
 		}
 
-		return
+		return responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
 	}
 }
 
@@ -192,8 +192,7 @@ func ParseAccountBalance(privateKey string,
 	client := GetClient(proxy)
 	authToken := loginAccount(client, privateKey, headers)
 	headers["Authorization"] = "Bearer " + authToken
-	profileRequest(client, privateKey, headers)
-	mgfBalance, usdcBalance := sendConnectRequest(client, privateKey, headers)
+	mgfBalance, usdcBalance := profileRequest(client, privateKey, headers)
 
 	log.Printf("%s | MGF Balance: %f | USDC Balance: %f", privateKey, mgfBalance, usdcBalance)
 
