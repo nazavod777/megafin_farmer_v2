@@ -81,6 +81,8 @@ func profileRequest(client *fasthttp.Client,
 func loginAccount(client *fasthttp.Client,
 	privateKeyHex string,
 	headers map[string]string) string {
+	headers["accept"] = "application/json"
+
 	privateKey, err := crypto.HexToECDSA(privateKeyHex)
 
 	if err != nil {
@@ -172,8 +174,8 @@ func StartFarmAccount(privateKey string,
 
 	for {
 		mgfBalance, usdcBalance := sendConnectRequest(client, privateKey, headers)
-		log.Printf("%s | MGF Balance: %f | USDC Balance: %f | Sleeping 90 secs.", privateKey, mgfBalance, usdcBalance)
-		time.Sleep(time.Second * time.Duration(90))
+		log.Printf("%s | MGF Balance: %f | USDC Balance: %f | Sleeping 120 secs.", privateKey, mgfBalance, usdcBalance)
+		time.Sleep(time.Second * time.Duration(120))
 	}
 }
 
