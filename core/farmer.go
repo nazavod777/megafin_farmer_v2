@@ -16,7 +16,7 @@ func doRequest(client *fasthttp.Client,
 	url string,
 	method string,
 	payload interface{},
-	headers map[string]string) ([]byte, error) {
+	headers map[string]string) ([]byte, int, error) {
 
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -29,7 +29,7 @@ func doRequest(client *fasthttp.Client,
 		jsonData, err := json.Marshal(payload)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+			return nil, 0, fmt.Errorf("failed to marshal JSON: %w", err)
 		}
 		req.SetBody(jsonData)
 	}
@@ -42,12 +42,13 @@ func doRequest(client *fasthttp.Client,
 	defer fasthttp.ReleaseResponse(resp)
 
 	if err := client.Do(req, resp); err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, 0, fmt.Errorf("request failed: %w", err)
 	}
 
 	respBody := make([]byte, len(resp.Body()))
 	copy(respBody, resp.Body())
-	return respBody, nil
+
+	return respBody, resp.StatusCode(), nil
 }
 
 func profileRequest(client *fasthttp.Client,
@@ -56,20 +57,20 @@ func profileRequest(client *fasthttp.Client,
 	for {
 		var responseData customTypes.ProfileResponseStruct
 
-		respBody, err := doRequest(client, "https://api.megafin.xyz/users/profile", "GET", nil, headers)
+		respBody, statusCode, err := doRequest(client, "https://api.megafin.xyz/users/profile", "GET", nil, headers)
 
 		if err != nil {
-			log.Printf("%s | Error When Profile: %s", privateKeyHex, err)
+			log.Printf("%s | Error When Profile: %s | Status Code: %d", privateKeyHex, err, statusCode)
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
-			log.Printf("%s | Failed To Parse JSON Response When Profile: %s", privateKeyHex, string(respBody))
+			log.Printf("%s | Failed To Parse JSON Response When Profile: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
 			continue
 		}
 
@@ -106,20 +107,20 @@ func loginAccount(client *fasthttp.Client,
 
 	for {
 		var responseData customTypes.LoginResponseStruct
-		respBody, err := doRequest(client, "https://api.megafin.xyz/auth", "POST", payload, headers)
+		respBody, statusCode, err := doRequest(client, "https://api.megafin.xyz/auth", "POST", payload, headers)
 
 		if err != nil {
-			log.Printf("%s | Error When Auth: %s", privateKeyHex, err)
+			log.Printf("%s | Error When Auth: %s | Status Code: %d", privateKeyHex, err, statusCode)
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
-			log.Printf("%s | Failed To Parse JSON Response When Logging: %s", privateKeyHex, string(respBody))
+			log.Printf("%s | Failed To Parse JSON Response When Logging: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
 			continue
 		}
 
@@ -133,20 +134,20 @@ func sendConnectRequest(client *fasthttp.Client,
 	for {
 		var responseData customTypes.PingResponseStruct
 
-		respBody, err := doRequest(client, "https://api.megafin.xyz/users/connect", "GET", nil, headers)
+		respBody, statusCode, err := doRequest(client, "https://api.megafin.xyz/users/connect", "GET", nil, headers)
 
 		if err != nil {
-			log.Printf("%s | Error When Pinging: %s", privateKeyHex, err)
+			log.Printf("%s | Error When Pinging: %s | Status Code: %d", privateKeyHex, err, statusCode)
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
-			log.Printf("%s | Failed To Parse JSON Response When Pinging: %s", privateKeyHex, string(respBody))
+			log.Printf("%s | Failed To Parse JSON Response When Pinging: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
 			continue
 		}
 
