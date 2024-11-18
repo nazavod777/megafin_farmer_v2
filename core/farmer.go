@@ -54,7 +54,7 @@ func doRequest(client *fasthttp.Client,
 
 func profileRequest(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) (float64, float64) {
+	headers map[string]string) (map[string]string, float64, float64) {
 	for {
 		var responseData customTypes.ProfileResponseStruct
 
@@ -62,26 +62,29 @@ func profileRequest(client *fasthttp.Client,
 
 		if err != nil {
 			log.Printf("%s | Error When Profile: %s | Status Code: %d", privateKeyHex, err, statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
 			log.Printf("%s | Failed To Parse JSON Response When Profile: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
-		return responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
+		return headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
 	}
 }
 
 func loginAccount(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) string {
+	headers map[string]string) (map[string]string, string) {
 
 	headers["accept"] = "application/json"
 
@@ -115,26 +118,29 @@ func loginAccount(client *fasthttp.Client,
 
 		if err != nil {
 			log.Printf("%s | Error When Auth: %s | Status Code: %d", privateKeyHex, err, statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
 			log.Printf("%s | Failed To Parse JSON Response When Logging: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
-		return responseData.Result.Token
+		return headers, responseData.Result.Token
 	}
 }
 
 func sendConnectRequest(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) (float64, float64) {
+	headers map[string]string) (map[string]string, float64, float64) {
 	for {
 		var responseData customTypes.PingResponseStruct
 
@@ -142,20 +148,23 @@ func sendConnectRequest(client *fasthttp.Client,
 
 		if err != nil {
 			log.Printf("%s | Error When Pinging: %s | Status Code: %d", privateKeyHex, err, statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
 		if err = json.Unmarshal(respBody, &responseData); err != nil {
 			log.Printf("%s | Failed To Parse JSON Response When Pinging: %s | Status Code: %d", privateKeyHex, string(respBody), statusCode)
+			headers["user-agent"] = uarand.GetRandom()
 			continue
 		}
 
-		return responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
+		return headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
 	}
 }
 
@@ -171,12 +180,13 @@ func StartFarmAccount(privateKey string,
 	}
 
 	client := GetClient(proxy)
-	authToken := loginAccount(client, privateKey, headers)
+	headers, authToken := loginAccount(client, privateKey, headers)
 	headers["Authorization"] = "Bearer " + authToken
 	profileRequest(client, privateKey, headers)
 
 	for {
-		mgfBalance, usdcBalance := sendConnectRequest(client, privateKey, headers)
+		var mgfBalance, usdcBalance float64
+		headers, mgfBalance, usdcBalance = sendConnectRequest(client, privateKey, headers)
 		log.Printf("%s | MGF Balance: %f | USDC Balance: %f | Sleeping 120 secs.", privateKey, mgfBalance, usdcBalance)
 		time.Sleep(time.Second * time.Duration(120))
 	}
@@ -194,9 +204,9 @@ func ParseAccountBalance(privateKey string,
 	}
 
 	client := GetClient(proxy)
-	authToken := loginAccount(client, privateKey, headers)
+	headers, authToken := loginAccount(client, privateKey, headers)
 	headers["Authorization"] = "Bearer " + authToken
-	mgfBalance, usdcBalance := profileRequest(client, privateKey, headers)
+	headers, mgfBalance, usdcBalance := profileRequest(client, privateKey, headers)
 
 	log.Printf("%s | MGF Balance: %f | USDC Balance: %f", privateKey, mgfBalance, usdcBalance)
 
