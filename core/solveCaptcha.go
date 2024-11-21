@@ -68,7 +68,7 @@ func createTask(client *fasthttp.Client,
 		}
 
 		if createTaskResponse.ErrorID != 0 {
-			log.Printf("%s | Error in Response When Create Task: %s, response: %s", privateKeyHex, string(body), string(resp.Body()))
+			log.Printf("%s | Error in Response When Create Task: %s", privateKeyHex, string(body))
 			continue
 		}
 
@@ -116,7 +116,7 @@ func getTaskResult(client *fasthttp.Client,
 		}
 
 		if result.ErrorID != 0 {
-			log.Printf("%s | Error in Response When Get Task Result: %s, response: %s", privateKeyHex, string(body), string(resp.Body()))
+			log.Printf("%s | Error in Response When Get Task Result: %s", privateKeyHex, string(body))
 			return nil
 		}
 
