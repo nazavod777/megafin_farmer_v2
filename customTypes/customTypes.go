@@ -36,3 +36,7 @@ type PingResponseStruct struct {
 		} `json:"balance"`
 	} `json:"result"`
 }
+
+type ConfigStruct struct {
+	TwoCaptchaApiKey string `json:"two_captcha_api_key"`
+}
