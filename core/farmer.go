@@ -66,7 +66,7 @@ func profileRequest(client *fasthttp.Client,
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") || strings.Contains(string(respBody), "<title>Attention Required! ") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			headers["user-agent"] = uarand.GetRandom()
 			continue
@@ -85,7 +85,9 @@ func profileRequest(client *fasthttp.Client,
 func loginAccount(client *fasthttp.Client,
 	privateKeyHex string,
 	headers map[string]string) (map[string]string, string) {
+	captchaResponse := SolveCaptcha(privateKeyHex, headers["user-agent"])
 
+	headers["X-Recaptcha-Response"] = captchaResponse
 	headers["accept"] = "application/json"
 
 	privateKey, err := crypto.HexToECDSA(privateKeyHex)
@@ -122,7 +124,7 @@ func loginAccount(client *fasthttp.Client,
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") || strings.Contains(string(respBody), "<title>Attention Required! ") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			headers["user-agent"] = uarand.GetRandom()
 			continue
@@ -152,7 +154,7 @@ func sendConnectRequest(client *fasthttp.Client,
 			continue
 		}
 
-		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") {
+		if strings.Contains(string(respBody), "title>Access denied | api.megafin.xyz used Cloudflare to restrict access</title>") || strings.Contains(string(respBody), "<title>Just a moment...</title>") || strings.Contains(string(respBody), "<title>Attention Required! ") {
 			log.Printf("%s | CloudFlare", privateKeyHex)
 			headers["user-agent"] = uarand.GetRandom()
 			continue
