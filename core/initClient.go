@@ -32,7 +32,6 @@ func GetClient(currentProxy string) *fasthttp.Client {
 		MinVersion: tls.VersionTLS12,
 		MaxVersion: tls.VersionTLS13,
 
-		// Chrome 110 cipher suites в правильном порядке
 		CipherSuites: []uint16{
 			tls.TLS_AES_128_GCM_SHA256,
 			tls.TLS_AES_256_GCM_SHA384,
@@ -51,6 +50,7 @@ func GetClient(currentProxy string) *fasthttp.Client {
 			tls.CurveP384,
 		},
 
+		// Дополнительные настройки
 		Renegotiation:            tls.RenegotiateNever,
 		PreferServerCipherSuites: false,
 		SessionTicketsDisabled:   false,
