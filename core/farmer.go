@@ -136,6 +136,7 @@ func loginAccount(client *fasthttp.Client,
 			continue
 		}
 
+		delete(headers, "X-Recaptcha-Response")
 		return headers, responseData.Result.Token
 	}
 }
