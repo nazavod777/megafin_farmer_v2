@@ -139,7 +139,7 @@ func main() {
 	var accountsListSorted []string
 	defer handlePanic()
 
-	err := utils.ReadJson("data/config.json", &global.ConfigFile)
+	err := utils.ReadJson("./data/config.json", &global.ConfigFile)
 
 	if err != nil {
 		log.Panicf("Error reading config file: %s", err)
