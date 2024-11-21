@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"megafin_farmer/core"
+	"megafin_farmer/global"
 	"megafin_farmer/utils"
 	"os"
 	"strconv"
@@ -118,16 +119,22 @@ func main() {
 	var accountsListSorted []string
 	defer handlePanic()
 
+	err := utils.ReadJson("data/config.json", &global.ConfigFile)
+
+	if err != nil {
+		log.Panicf("Error reading config file: %s", err)
+	}
+
 	accountsList, err := utils.ReadFileByRows("./data/accounts.txt")
 
 	if err != nil {
-		log.Panicf("Error While Reading Accounts File: %v", err)
+		log.Panicf("Error While Reading Accounts File: %s", err)
 	}
 
 	proxyList, err := utils.ReadFileByRows("./data/proxies.txt")
 
 	if err != nil {
-		log.Panicf("Error While Reading Proxy File: %v", err)
+		log.Panicf("Error While Reading Proxy File: %s", err)
 	}
 
 	for _, proxy := range proxyList {
@@ -165,7 +172,7 @@ func main() {
 	userAction, err := strconv.Atoi(inputUser())
 
 	if err != nil {
-		log.Panicf("Error When Enter Your Action: %v", err)
+		log.Panicf("Error When Enter Your Action: %s", err)
 	}
 
 	startTasks(userAction, accountsListSorted, proxyListSorted)
