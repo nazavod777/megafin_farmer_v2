@@ -9,6 +9,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"log"
 	"megafin_farmer/customTypes"
+	"megafin_farmer/global"
 	"strings"
 	"time"
 )
@@ -183,7 +184,11 @@ func StartFarmAccount(privateKey string,
 	}
 
 	client := GetClient(proxy)
+
+	global.Semaphore <- struct{}{}
 	headers, authToken := loginAccount(client, privateKey, headers)
+	<-global.Semaphore
+
 	headers["Authorization"] = "Bearer " + authToken
 	profileRequest(client, privateKey, headers)
 
@@ -207,9 +212,12 @@ func ParseAccountBalance(privateKey string,
 	}
 
 	client := GetClient(proxy)
+
+	global.Semaphore <- struct{}{}
 	headers, authToken := loginAccount(client, privateKey, headers)
 	headers["Authorization"] = "Bearer " + authToken
 	headers, mgfBalance, usdcBalance := profileRequest(client, privateKey, headers)
+	<-global.Semaphore
 
 	log.Printf("%s | MGF Balance: %f | USDC Balance: %f", privateKey, mgfBalance, usdcBalance)
 
