@@ -162,7 +162,7 @@ func sendConnectRequest(client *fasthttp.Client,
 
 		if statusCode == 401 {
 			delete(headers, "X-Recaptcha-Response")
-			return 401, nil, 0, 0
+			return 401, headers, 0, 0
 		}
 
 		if err != nil {
@@ -201,10 +201,11 @@ func StartFarmAccount(privateKey string,
 	client := GetClient(proxy)
 
 	for {
+		var authToken string
+
 		global.Semaphore <- struct{}{}
 		for {
-			headers, authToken := loginAccount(client, privateKey, headers)
-
+			headers, authToken = loginAccount(client, privateKey, headers)
 			headers["Authorization"] = "Bearer " + authToken
 			statusCode, _, _, _ := profileRequest(client, privateKey, headers)
 
@@ -247,13 +248,14 @@ func ParseAccountBalance(privateKey string,
 	client := GetClient(proxy)
 
 	var mgfBalance, usdcBalance float64
+	var authToken string
+	var statusCode int
 
 	global.Semaphore <- struct{}{}
 	for {
-		headers, authToken := loginAccount(client, privateKey, headers)
+		headers, authToken = loginAccount(client, privateKey, headers)
 		headers["Authorization"] = "Bearer " + authToken
 
-		var statusCode int
 		statusCode, headers, mgfBalance, usdcBalance = profileRequest(client, privateKey, headers)
 
 		if statusCode == 401 {
