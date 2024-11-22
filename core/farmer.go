@@ -55,11 +55,16 @@ func doRequest(client *fasthttp.Client,
 
 func profileRequest(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) (map[string]string, float64, float64) {
+	headers map[string]string) (int, map[string]string, float64, float64) {
 	for {
 		var responseData customTypes.ProfileResponseStruct
 
 		respBody, statusCode, err := doRequest(client, "https://api.megafin.xyz/users/profile", "GET", nil, headers)
+
+		if statusCode == 401 {
+			delete(headers, "X-Recaptcha-Response")
+			return 401, nil, 0, 0
+		}
 
 		if err != nil {
 			log.Printf("%s | Error When Profile: %s | Status Code: %d", privateKeyHex, err, statusCode)
@@ -79,7 +84,7 @@ func profileRequest(client *fasthttp.Client,
 			continue
 		}
 
-		return headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
+		return 0, headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
 	}
 }
 
@@ -137,6 +142,11 @@ func loginAccount(client *fasthttp.Client,
 			continue
 		}
 
+		if responseData.Result.Token == "" {
+			log.Printf("%s | Wrong Response When Auth: %s | Status Code: %d", privateKeyHex, err, statusCode)
+			continue
+		}
+
 		delete(headers, "X-Recaptcha-Response")
 		return headers, responseData.Result.Token
 	}
@@ -144,11 +154,16 @@ func loginAccount(client *fasthttp.Client,
 
 func sendConnectRequest(client *fasthttp.Client,
 	privateKeyHex string,
-	headers map[string]string) (map[string]string, float64, float64) {
+	headers map[string]string) (int, map[string]string, float64, float64) {
 	for {
 		var responseData customTypes.PingResponseStruct
 
 		respBody, statusCode, err := doRequest(client, "https://api.megafin.xyz/users/connect", "GET", nil, headers)
+
+		if statusCode == 401 {
+			delete(headers, "X-Recaptcha-Response")
+			return 401, nil, 0, 0
+		}
 
 		if err != nil {
 			log.Printf("%s | Error When Pinging: %s | Status Code: %d", privateKeyHex, err, statusCode)
@@ -168,7 +183,7 @@ func sendConnectRequest(client *fasthttp.Client,
 			continue
 		}
 
-		return headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
+		return 0, headers, responseData.Result.Balance.MGF, responseData.Result.Balance.USDC
 	}
 }
 
@@ -186,17 +201,37 @@ func StartFarmAccount(privateKey string,
 	client := GetClient(proxy)
 
 	global.Semaphore <- struct{}{}
-	headers, authToken := loginAccount(client, privateKey, headers)
-	<-global.Semaphore
-
-	headers["Authorization"] = "Bearer " + authToken
-	profileRequest(client, privateKey, headers)
 
 	for {
-		var mgfBalance, usdcBalance float64
-		headers, mgfBalance, usdcBalance = sendConnectRequest(client, privateKey, headers)
-		log.Printf("%s | MGF Balance: %f | USDC Balance: %f | Sleeping 120 secs.", privateKey, mgfBalance, usdcBalance)
-		time.Sleep(time.Second * time.Duration(120))
+		for {
+			headers, authToken := loginAccount(client, privateKey, headers)
+
+			headers["Authorization"] = "Bearer " + authToken
+			statusCode, _, _, _ := profileRequest(client, privateKey, headers)
+
+			if statusCode == 401 {
+				log.Printf("%s | Unathorized, Relogining...", privateKey)
+				continue
+			}
+
+			break
+		}
+
+		<-global.Semaphore
+
+		for {
+			var statusCode int
+			var mgfBalance, usdcBalance float64
+			statusCode, headers, mgfBalance, usdcBalance = sendConnectRequest(client, privateKey, headers)
+
+			if statusCode == 401 {
+				log.Printf("%s | Unathorized, Relogining...", privateKey)
+				break
+			}
+
+			log.Printf("%s | MGF Balance: %f | USDC Balance: %f | Sleeping 120 secs.", privateKey, mgfBalance, usdcBalance)
+			time.Sleep(time.Second * time.Duration(120))
+		}
 	}
 }
 
@@ -213,10 +248,23 @@ func ParseAccountBalance(privateKey string,
 
 	client := GetClient(proxy)
 
+	var mgfBalance, usdcBalance float64
+
 	global.Semaphore <- struct{}{}
-	headers, authToken := loginAccount(client, privateKey, headers)
-	headers["Authorization"] = "Bearer " + authToken
-	headers, mgfBalance, usdcBalance := profileRequest(client, privateKey, headers)
+	for {
+		headers, authToken := loginAccount(client, privateKey, headers)
+		headers["Authorization"] = "Bearer " + authToken
+
+		var statusCode int
+		statusCode, headers, mgfBalance, usdcBalance = profileRequest(client, privateKey, headers)
+
+		if statusCode == 401 {
+			log.Printf("%s | Unathorized, Relogining...", privateKey)
+			continue
+		}
+
+		break
+	}
 	<-global.Semaphore
 
 	log.Printf("%s | MGF Balance: %f | USDC Balance: %f", privateKey, mgfBalance, usdcBalance)
