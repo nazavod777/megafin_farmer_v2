@@ -200,9 +200,8 @@ func StartFarmAccount(privateKey string,
 
 	client := GetClient(proxy)
 
-	global.Semaphore <- struct{}{}
-
 	for {
+		global.Semaphore <- struct{}{}
 		for {
 			headers, authToken := loginAccount(client, privateKey, headers)
 
@@ -216,7 +215,6 @@ func StartFarmAccount(privateKey string,
 
 			break
 		}
-
 		<-global.Semaphore
 
 		for {
