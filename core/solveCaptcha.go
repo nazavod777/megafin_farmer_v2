@@ -27,9 +27,8 @@ func createTask(client *fasthttp.Client,
 	userAgent string) string {
 	payload := map[string]interface{}{
 		"clientKey": global.ConfigFile.TwoCaptchaApiKey,
-		"soft_id":   "4744",
+		"softId":    4744,
 		"task": map[string]interface{}{
-			"soft_id":    "4744",
 			"type":       "TurnstileTaskProxyless",
 			"websiteURL": "https://app.megafin.xyz/",
 			"websiteKey": "0x4AAAAAAA0SGzxWuGl6kriB",
@@ -47,7 +46,7 @@ func createTask(client *fasthttp.Client,
 		req := fasthttp.AcquireRequest()
 		defer fasthttp.ReleaseRequest(req)
 
-		req.SetRequestURI("https://api.2captcha.com/createTask?soft_id=4744")
+		req.SetRequestURI("https://api.2captcha.com/createTask")
 		req.Header.SetMethod("POST")
 		req.Header.SetContentType("application/json")
 		req.SetBody(jsonData)
@@ -82,7 +81,7 @@ func getTaskResult(client *fasthttp.Client,
 	privateKeyHex string,
 	taskID string) *string {
 	payload := map[string]interface{}{
-		"soft_id":   "4744",
+		"softId":    4744,
 		"clientKey": global.ConfigFile.TwoCaptchaApiKey,
 		"taskId":    taskID,
 	}
@@ -96,7 +95,7 @@ func getTaskResult(client *fasthttp.Client,
 		req := fasthttp.AcquireRequest()
 		defer fasthttp.ReleaseRequest(req)
 
-		req.SetRequestURI("https://api.2captcha.com/getTaskResult?soft_id=4744")
+		req.SetRequestURI("https://api.2captcha.com/getTaskResult")
 		req.Header.SetMethod("POST")
 		req.Header.SetContentType("application/json")
 		req.SetBody(jsonData)
