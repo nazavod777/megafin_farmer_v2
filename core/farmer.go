@@ -115,7 +115,6 @@ func loginAccount(client *fasthttp.Client,
 	signHash := fmt.Sprintf("0x%x", signature)
 
 	payload := map[string]interface{}{
-		"invite_code": "133d76e4",
 		"key":         fmt.Sprintf("megafin.xyz requests you to sign in with your wallet address: %s", address.Hex()),
 		"wallet_hash": signHash,
 	}
